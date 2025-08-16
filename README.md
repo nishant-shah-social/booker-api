@@ -18,7 +18,7 @@
 * Ensure java version >= 20 is installed
 * Ensure maven is installed for dependancy management. On mac you can install it via `brew install maven`
 * Ensure allure CLI is installed. On mac you can install it via `brew install allure`
-* Open terminal and navigate to the root of the project, i.e. `bookerTest`
+* Open terminal and navigate to the root of the project, i.e. `booker-api`
 * Run `mvn clean test -DsuiteXmlFile=testng.xm`. It will first download dependancies and then execute the tests, and
   generate the Allure report artifacts in the /targets folder
 * To view the allure report, run the command `allure serve target/allure-results`. this will open the report url in
