@@ -1,0 +1,35 @@
+[
+  {
+    "firstname": "Nishant",
+    "lastname": "Shah",
+    "totalprice": 150,
+    "depositpaid": true,
+    "additionalneeds": "air conditioning",
+    "bookingdates": {
+      "checkin": "2025-08-14",
+      "checkout": "2025-08-21"
+    }
+  },
+  {
+    "firstname": "Jony",
+    "lastname": "Depp",
+    "additionalneeds": "extra bed",
+    "totalprice": 200,
+    "depositpaid": false,
+    "bookingdates": {
+      "checkin": "2025-08-17",
+      "checkout": "2025-08-23"
+    }
+  },
+  {
+    "firstname": "Christiano",
+    "lastname": "Ronaldo",
+    "additionalneeds": "breakfast",
+    "totalprice": 300,
+    "depositpaid": true,
+    "bookingdates": {
+      "checkin": "2025-08-25",
+      "checkout": "2025-09-15"
+    }
+  }
+]

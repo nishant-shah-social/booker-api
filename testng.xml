@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="Booker Tests" parallel="classes" thread-count="4" verbose="1">
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+    </listeners>
+    <test verbose="2" preserve-order="true" name="BookingApiTests">
+        <classes>
+            <class name="api.booking.DeleteBookingTests">
+                <methods>
+                    <include name="deleteExistingBooking"/>
+                    <include name="deleteNonExistentBooking"/>
+                    <include name="deleteWithoutAuthentication_returns403"/>
+                    <include name="deleteWithWrongAuthToken_returns403"/>
+                    <include name="deleteExistingBooking_concurrent"/>
+                    <include name="deleteWithoutBookingId"/>
+                </methods>
+            </class>
+            <class name="api.booking.GetBookingTests">
+                <methods>
+                    <include name="getBookings_noFilters_returnsArrayWithValidIds"/>
+                    <include name="getBookings_filters_firstName"/>
+                    <include name="getBookings_filters_lastName"/>
+                    <include name="getBookings_filters_checkinDate_greater_than_providedDate"/>
+                    <include name="getBookings_filters_checkoutDate_less_than_provided_date"/>
+                    <include name="getBookings_filters_checkin_less_checkout_greater"/>
+                    <include name="getBookings_filters_checkoutDate_equal_to_provided_date"/>
+                    <include name="getBookings_filters_checkinDate_equal_to_providedDate"/>
+                    <include name="getBookings_filters_checkinDate_incorrect_format_return_400_status"/>
+                    <include name="getBookings_filters_checkinDate_incorrectType_return_400_status"/>
+                    <include name="getBookings_filters_return_empty_result"/>
+                    <include name="getBookings_filters_SQLInjection_truthy"/>
+                    <include name="getBookings_filters_SQLInjection_union"/>
+                </methods>
+            </class>
+            <class name="api.booking.PatchBookingTests">
+                <methods>
+                    <include name="patchBooking_firstname_noChangeInOtherFields"/>
+                    <include name="patchBooking_lastname_noChangeInOtherFields"/>
+                    <include name="patchBooking_depositPaid_noChangeInOtherFields"/>
+                    <include name="patchBooking_checkin_noChangeInOtherFields"/>
+                    <include name="patchBooking_checkout_noChangeInOtherFields"/>
+                    <include name="patchBooking_firstName_checkin_checkout_noChangeInOtherFields"/>
+                    <include name="patchBooking_non_existent_bookingId"/>
+                    <include name="patchBooking_incorrect_data_type_firstname_totalprice"/>
+                    <include name="patchBooking_missing_auth_token_403"/>
+                    <include name="patchBooking_wrong_auth_token_403"/>
+                    <include name="patchBooking_idemptoencyTest"/>
+                    <include name="patchBooking_specialCharacters_encoding"/>
+                    <include name="patchBooking_passing_non_existent_field"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    <test verbose="2" preserve-order="true" name="Booking e2e Tests">
+        <classes>
+            <class name="api.integration.Bookinge2eTests">
+                <methods>
+                    <include name="bookinge2eflow"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+</suite>

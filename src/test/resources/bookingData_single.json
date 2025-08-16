@@ -1,0 +1,13 @@
+[
+  {
+    "firstname": "Nishant",
+    "lastname": "Shah",
+    "totalprice": 150,
+    "depositpaid": true,
+    "additionalneeds": "air conditioning",
+    "bookingdates": {
+      "checkin": "2025-08-14",
+      "checkout": "2025-08-21"
+    }
+  }
+]

@@ -1,0 +1,88 @@
+pipeline {
+    agent any
+
+    environment {
+        MAVEN_HOME = '/usr/share/maven'
+        API_HOST = 'http://localhost:8080'  // API endpoint for tests
+    }
+
+    // pickup these versions from jenkins configured tool installations
+    tools {
+        maven 'Maven 3.9.3'
+        jdk 'Java 21'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git url: 'https://your-repo-url.git', branch: 'main'
+            }
+        }
+
+        stage('Build API') {
+            steps {
+                echo 'Building API project...'
+                dir('api') {    // assuming API code is in 'api' folder
+                    sh 'mvn clean package -DskipTests'
+                }
+            }
+        }
+
+        stage('Deploy API') {
+            steps {
+                echo 'Deploying API...'
+                // Example: run Docker container
+                sh '''
+                    docker build -t my-api:latest api/
+                    docker run -d -p 8080:8080 --name my-api my-api:latest
+                '''
+            }
+        }
+
+        stage('Run API Tests') {
+            steps {
+                echo 'Running API tests...'
+                dir('tests') {  // runs our actual tests
+                    sh "mvn test -DsuiteXmlFile=testng.xml -Dapi.host=$API_HOST -Dmaven.test.failure.ignore=false"
+                }
+            }
+            post {
+                always {
+                    junit 'tests/target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        //allure jenkins plugin should already be installed in jenkins instance
+        //Also, configure allure commandline in jenkins and give it name allure
+        stage('Allure Report') {
+           steps {
+                allure([
+                    includeProperties: false,
+                    jdk: '',
+                    results: [[path: 'target/allure-results']]
+                ])
+           }
+        }
+
+        stage('Clean Up') {
+            steps {
+                echo 'Stopping API container...'
+                sh 'docker stop my-api || true && docker rm my-api || true'
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'execute steps that are required to be processed always'
+        }
+        success {
+            echo 'execute steps for pipeline success'
+        }
+        failure {
+            echo 'execute steps for pipeline failure'
+        }
+    }
+}
