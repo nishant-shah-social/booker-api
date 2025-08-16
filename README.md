@@ -3,7 +3,7 @@
 ### With Docker
 
 * Clone the repo. If already cloned checkout the main or desired branch.
-* From the root folder, i.e. `bookerTest`, run the following command<br>
+* From the root folder, i.e. `booker-api`, run the following command<br>
   ```docker build -f docker/Dockerfile -t booker-tests:latest .```
 * This will generate a docker image `booker-tests` with tag latest
 * Now run the docker container with following command<br> ```docker run --rm -p 8080:8080 booker-tests```
