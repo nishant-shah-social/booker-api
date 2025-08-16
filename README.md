@@ -11,6 +11,8 @@
   port 8080
 * Open `http://localhost:8080` for visualizing the test report
 
+[Here](https://drive.google.com/file/d/1gYtQLV4BFSDmIz8zFTkJfp9KL8-FTDHw/view?usp=sharing) is a recording of the execution performed from my local using docker
+
 ### Without Docker on Local Machine
 
 * Ensure java version >= 20 is installed
