@@ -2,7 +2,7 @@ package api.booking;
 
 import api.setup.BaseTest;
 import api.setup.BookingFactory;
-import config.Constants;
+import config.Endpoints;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.json.JSONObject;
@@ -11,8 +11,8 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import pojo.BookingRequest;
 import pojo.CreateBookingResponse;
-import pojo.LoginRequest;
 import pojo.BookingResponse;
+import utils.Auth;
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
@@ -21,16 +21,16 @@ import java.util.Map;
 import static io.restassured.RestAssured.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static utils.Auth.login;
 import static utils.DateUtil.adjustDate;
 
 public class PatchBookingTests extends BaseTest {
+    Auth auth;
     private String token = "";
 
     @BeforeClass
     public void setupAuth() {
-        LoginRequest loginRequest = new LoginRequest(Constants.USERNAME, Constants.PASSWORD);
-        token = login(loginRequest, requestSpec, responseSpec);
+        auth = new Auth(client);
+        token = auth.login(username, password);
     }
 
     @DataProvider(name = "bookingData")
@@ -38,22 +38,24 @@ public class PatchBookingTests extends BaseTest {
         BookingRequest bookingRequests =
                 BookingFactory.loadBookingRequests("src/test/resources/bookingData.json")
                               .get(0);
-        CreateBookingResponse response = BookingFactory.createBooking(bookingRequests, requestSpec, responseSpec);
+        CreateBookingResponse response = bookingFactory.createBooking(bookingRequests);
         return new Object[][]{
                 {response}
         };
     }
 
     @Test(dataProvider = "bookingData")
-    public void patchBooking_firstname_noChangeInOtherFields(CreateBookingResponse createBookingResponse) {
+    public void patchBookingFirstnameNoChangeInOtherFieldsIsSuccessful(CreateBookingResponse createBookingResponse) {
         JSONObject patchBookingRequestBody = new JSONObject();
         patchBookingRequestBody.put("firstname", "Maestro");
 
         BookingResponse patchedResponse = client
                 .withToken(token)
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .withBody(patchBookingRequestBody.toString())
-                .patch("/booking/{id}", BookingResponse.class);
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .withJsonBody(patchBookingRequestBody)
+                .patch(Endpoints.BOOKING_BY_ID, 200)
+                .as(BookingResponse.class);
+
 
         // Assert firstname is updated and all other fields remain unchanged
         Map<String, Object> expectedUpdates = Map.of(
@@ -63,15 +65,16 @@ public class PatchBookingTests extends BaseTest {
     }
 
     @Test(dataProvider = "bookingData")
-    public void patchBooking_lastname_noChangeInOtherFields(CreateBookingResponse createBookingResponse) {
+    public void patchBookingLastnameNoChangeInOtherFieldsIsSuccessful(CreateBookingResponse createBookingResponse) {
         JSONObject patchBookingRequestBody = new JSONObject();
         patchBookingRequestBody.put("lastname", "Bond");
 
         BookingResponse patchedResponse = client
                 .withToken(token)
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .withBody(patchBookingRequestBody.toString())
-                .patch("/booking/{id}", BookingResponse.class);
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .withJsonBody(patchBookingRequestBody)
+                .patch(Endpoints.BOOKING_BY_ID, 200)
+                .as(BookingResponse.class);
 
         // Assert lastname is updated and all other fields remain unchanged
         Map<String, Object> expectedUpdates = Map.of(
@@ -81,15 +84,16 @@ public class PatchBookingTests extends BaseTest {
     }
 
     @Test(dataProvider = "bookingData")
-    public void patchBooking_depositPaid_noChangeInOtherFields(CreateBookingResponse createBookingResponse) {
+    public void patchBookingDepositPaidNoChangeInOtherFieldsIsSuccessful(CreateBookingResponse createBookingResponse) {
         JSONObject patchBookingRequestBody = new JSONObject();
         patchBookingRequestBody.put("depositpaid", false);
 
         BookingResponse patchedResponse = client
                 .withToken(token)
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .withBody(patchBookingRequestBody.toString())
-                .patch("/booking/{id}", BookingResponse.class);
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .withJsonBody(patchBookingRequestBody)
+                .patch(Endpoints.BOOKING_BY_ID, 200)
+                .as(BookingResponse.class);
 
         // Assert depositpaid is updated and all other fields remain unchanged
         Map<String, Object> expectedUpdates = Map.of(
@@ -102,7 +106,7 @@ public class PatchBookingTests extends BaseTest {
 
 
     @Test(dataProvider = "bookingData")
-    public void patchBooking_checkin_noChangeInOtherFields(CreateBookingResponse createBookingResponse) {
+    public void patchBookingCheckinNoChangeInOtherFieldsIsSuccessful(CreateBookingResponse createBookingResponse) {
         String checkinDateParam =
                 adjustDate(
                         createBookingResponse
@@ -118,9 +122,10 @@ public class PatchBookingTests extends BaseTest {
 
         BookingResponse patchedResponse = client
                 .withToken(token)
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .withBody(patchBookingRequestBody.toString())
-                .patch("/booking/{id}", BookingResponse.class);
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .withJsonBody(patchBookingRequestBody)
+                .patch(Endpoints.BOOKING_BY_ID, 200)
+                .as(BookingResponse.class);
 
         // Assert checkin is updated and all other fields remain unchanged
         Map<String, Object> expectedUpdates = Map.of(
@@ -132,7 +137,7 @@ public class PatchBookingTests extends BaseTest {
     }
 
     @Test(dataProvider = "bookingData")
-    public void patchBooking_checkout_noChangeInOtherFields(CreateBookingResponse createBookingResponse) {
+    public void patchBookingCheckoutNoChangeInOtherFieldsIsSuccessful(CreateBookingResponse createBookingResponse) {
         String checkoutDateParam =
                 adjustDate(
                         createBookingResponse
@@ -148,9 +153,10 @@ public class PatchBookingTests extends BaseTest {
 
         BookingResponse patchedResponse = client
                 .withToken(token)
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .withBody(patchBookingRequestBody.toString())
-                .patch("/booking/{id}", BookingResponse.class);
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .withJsonBody(patchBookingRequestBody)
+                .patch(Endpoints.BOOKING_BY_ID, 200)
+                .as(BookingResponse.class);
 
         // Assert checkout is updated and all other fields remain unchanged
         Map<String, Object> expectedUpdates = Map.of(
@@ -161,7 +167,7 @@ public class PatchBookingTests extends BaseTest {
     }
 
     @Test(dataProvider = "bookingData")
-    public void patchBooking_firstName_checkin_checkout_noChangeInOtherFields(CreateBookingResponse createBookingResponse) {
+    public void patchBookingFirstNameCheckinCheckoutNoChangeInOtherFieldsIsSuccessful(CreateBookingResponse createBookingResponse) {
         String checkinDateParam =
                 adjustDate(
                         createBookingResponse
@@ -187,9 +193,10 @@ public class PatchBookingTests extends BaseTest {
 
         BookingResponse patchedResponse = client
                 .withToken(token)
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .withBody(patchBookingRequestBody.toString())
-                .patch("/booking/{id}", BookingResponse.class);
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .withJsonBody(patchBookingRequestBody)
+                .patch(Endpoints.BOOKING_BY_ID, 200)
+                .as(BookingResponse.class);
 
         // Assert checkout is updated and all other fields remain unchanged
         Map<String, Object> expectedUpdates = Map.of(
@@ -208,57 +215,58 @@ public class PatchBookingTests extends BaseTest {
 
         Response response = client
                 .withToken(token)
-                .withPathParam("id", 2147483647)
-                .withBody(patchBookingRequestBody.toString())
-                .patch("/booking/{id}", 404);
+                .withPathParam(Endpoints.PARAM_ID, 2147483647)
+                .withJsonBody(patchBookingRequestBody)
+                .patch(Endpoints.BOOKING_BY_ID, 404);
     }
 
     @Test(dataProvider = "bookingData")
-    public void patchBooking_incorrect_data_type_firstname_totalprice(CreateBookingResponse createBookingResponse) {
+    public void patchBookingIncorrectDataTypeFirstnameTotalpriceReturnsBadParams(CreateBookingResponse createBookingResponse) {
         JSONObject patchBookingRequestBody = new JSONObject();
         patchBookingRequestBody.put("totalprice", "test");
         patchBookingRequestBody.put("firstname", 123123);
 
         Response response = client
                 .withToken(token)
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .withBody(patchBookingRequestBody.toString())
-                .patch("/booking/{id}", 400);
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .withJsonBody(patchBookingRequestBody)
+                .patch(Endpoints.BOOKING_BY_ID, 400);
     }
 
     @Test(dataProvider = "bookingData")
-    public void patchBooking_missing_auth_token_403(CreateBookingResponse createBookingResponse) {
+    public void patchBookingMissingAuthTokenReturns403(CreateBookingResponse createBookingResponse) {
         JSONObject patchBookingRequestBody = new JSONObject();
         patchBookingRequestBody.put("firstname", "Bond");
 
         Response response = client
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .withBody(patchBookingRequestBody.toString())
-                .patch("/booking/{id}", 403);
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .withJsonBody(patchBookingRequestBody)
+                .patch(Endpoints.BOOKING_BY_ID, 403);
     }
 
     @Test(dataProvider = "bookingData")
-    public void patchBooking_wrong_auth_token_403(CreateBookingResponse createBookingResponse) {
+    public void patchBookingWrongAuthTokenRetruns403(CreateBookingResponse createBookingResponse) {
         JSONObject patchBookingRequestBody = new JSONObject();
         patchBookingRequestBody.put("firstname", "Bond");
 
         Response response = client
                 .withToken("testtoken")
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .withBody(patchBookingRequestBody.toString())
-                .patch("/booking/{id}", 403);
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .withJsonBody(patchBookingRequestBody)
+                .patch(Endpoints.BOOKING_BY_ID, 403);
     }
 
     @Test(dataProvider = "bookingData")
-    public void patchBooking_idemptoencyTest(CreateBookingResponse createBookingResponse) {
+    public void patchBookingIdemptoencyIsSuccessful(CreateBookingResponse createBookingResponse) {
         JSONObject patchBookingRequestBody = new JSONObject();
         patchBookingRequestBody.put("firstname", "Maestro");
 
         BookingResponse patchedResponse = client
                 .withToken(token)
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .withBody(patchBookingRequestBody.toString())
-                .patch("/booking/{id}", BookingResponse.class);
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .withJsonBody(patchBookingRequestBody)
+                .patch(Endpoints.BOOKING_BY_ID, 200)
+                .as(BookingResponse.class);
 
         // Assert firstname is updated and all other fields remain unchanged
         Map<String, Object> expectedUpdates = Map.of(
@@ -269,24 +277,26 @@ public class PatchBookingTests extends BaseTest {
         // performing patch again to check for idempotency
         patchedResponse = client
                 .withToken(token)
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .withBody(patchBookingRequestBody.toString())
-                .patch("/booking/{id}", BookingResponse.class);
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .withJsonBody(patchBookingRequestBody)
+                .patch(Endpoints.BOOKING_BY_ID, 200)
+                .as(BookingResponse.class);
         assertBookingFields(patchedResponse, createBookingResponse, expectedUpdates);
 
     }
 
     @Test(dataProvider = "bookingData")
-    public void patchBooking_specialCharacters_encoding(CreateBookingResponse createBookingResponse) {
+    public void patchBookingSpecialCharactersAndEncodingIsSuccessful(CreateBookingResponse createBookingResponse) {
         JSONObject patchBookingRequestBody = new JSONObject();
         patchBookingRequestBody.put("firstname", "O'Connor<testing>");
         patchBookingRequestBody.put("lastname", "测试");
 
         BookingResponse patchedResponse = client
                 .withToken(token)
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .withBody(patchBookingRequestBody.toString())
-                .patch("/booking/{id}", BookingResponse.class);
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .withJsonBody(patchBookingRequestBody)
+                .patch(Endpoints.BOOKING_BY_ID, 200)
+                .as(BookingResponse.class);
 
         // Assert firstname and lastname is updated and all other fields remain unchanged
         Map<String, Object> expectedUpdates = Map.of(
@@ -297,22 +307,74 @@ public class PatchBookingTests extends BaseTest {
     }
 
     @Test(dataProvider = "bookingData")
-    public void patchBooking_passing_non_existent_field(CreateBookingResponse createBookingResponse) {
+    public void patchBookingNonExistentFieldReturnsBadParams(CreateBookingResponse createBookingResponse) {
         JSONObject patchBookingRequestBody = new JSONObject();
         patchBookingRequestBody.put("address", "Rotterdam");
 
         RequestSpecification request = given()
                 .spec(requestSpec)
                 .cookie("token", token)
-                .pathParams("id", createBookingResponse.getBookingid())
+                .pathParams(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
                 .body(patchBookingRequestBody.toString());
 
         request
                 .when()
-                .patch("/booking/{id}")
+                .patch(Endpoints.BOOKING_BY_ID)
                 .then()
                 .spec(responseSpec)
                 .statusCode(400);
+    }
+
+    @Test(dataProvider = "bookingData")
+    public void patchBookingTotalPriceBoundaryEqualToMaxPossibleIntegerValueIsSuccess(CreateBookingResponse createBookingResponse) {
+        JSONObject patchBookingRequestBody = new JSONObject();
+        patchBookingRequestBody.put("totalprice", Integer.MAX_VALUE);
+
+        BookingResponse patchedResponse = client
+                .withToken(token)
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .withJsonBody(patchBookingRequestBody)
+                .patch(Endpoints.BOOKING_BY_ID, 200)
+                .as(BookingResponse.class);
+
+        // Assert firstname and lastname is updated and all other fields remain unchanged
+        Map<String, Object> expectedUpdates = Map.of(
+                "totalprice", patchBookingRequestBody.get("totalprice")
+        );
+        assertBookingFields(patchedResponse, createBookingResponse, expectedUpdates);
+    }
+
+    @Test(dataProvider = "bookingData")
+    public void patchBookingTotalPriceBoundaryJustAboveIntegerMaxValueReturnsBadParams(CreateBookingResponse createBookingResponse) {
+        JSONObject patchBookingRequestBody = new JSONObject();
+        patchBookingRequestBody.put("totalprice", 2147483648L);
+
+        client
+                .withToken(token)
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .withJsonBody(patchBookingRequestBody)
+                .patch(Endpoints.BOOKING_BY_ID, 400);
+
+    }
+
+    @Test(dataProvider = "bookingData")
+    public void patchBookingTotalPriceBoundaryJustBelowIntegerMaxValueIsSuccess(CreateBookingResponse createBookingResponse) {
+        JSONObject patchBookingRequestBody = new JSONObject();
+        patchBookingRequestBody.put("totalprice", Integer.MAX_VALUE - 1);
+
+        BookingResponse patchedResponse = client
+                .withToken(token)
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .withJsonBody(patchBookingRequestBody)
+                .patch(Endpoints.BOOKING_BY_ID, 200)
+                .as(BookingResponse.class);
+
+        // Assert firstname and lastname is updated and all other fields remain unchanged
+        Map<String, Object> expectedUpdates = Map.of(
+                "totalprice", patchBookingRequestBody.get("totalprice")
+        );
+        assertBookingFields(patchedResponse, createBookingResponse, expectedUpdates);
+
     }
 
     public void assertBookingFields(BookingResponse actual,

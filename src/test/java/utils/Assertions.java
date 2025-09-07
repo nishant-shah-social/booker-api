@@ -1,5 +1,9 @@
 package utils;
 
+import pojo.BookingRequest;
+import pojo.BookingResponse;
+import pojo.CreateBookingResponse;
+
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
@@ -31,4 +35,13 @@ public class Assertions {
         }
     }
 
+    public static void assertBookingMatchesResponse(BookingRequest bookingRequest, BookingResponse actualCreateBookingResponse) {
+        assertThat("Firstname should match", bookingRequest.getFirstname(), is(actualCreateBookingResponse.getFirstname()));
+        assertThat("Lastname should match", bookingRequest.getLastname(), is(actualCreateBookingResponse.getLastname()));
+        assertThat("Totalprice should match", bookingRequest.getTotalprice(), is(actualCreateBookingResponse.getTotalprice()));
+        assertThat("Depositpaid should match", bookingRequest.isDepositpaid(), is(actualCreateBookingResponse.isDepositpaid()));
+        assertThat("Checkin date should match", bookingRequest.getBookingdates().getCheckin(), is(actualCreateBookingResponse.getBookingdates().getCheckin()));
+        assertThat("Checkout date should match", bookingRequest.getBookingdates().getCheckout(), is(actualCreateBookingResponse.getBookingdates().getCheckout()));
+        assertThat("Additionalneeds should match", bookingRequest.getAdditionalneeds(), is(actualCreateBookingResponse.getAdditionalneeds()));
+    }
 }

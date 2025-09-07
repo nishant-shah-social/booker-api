@@ -2,6 +2,7 @@ package api.booking;
 
 import api.setup.BaseTest;
 import api.setup.BookingFactory;
+import config.Endpoints;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import pojo.BookingRequest;
@@ -27,19 +28,21 @@ public class GetBookingTests extends BaseTest {
                 BookingFactory.loadBookingRequests("src/test/resources/bookingData.json");
 
         for (BookingRequest request : bookingRequests) {
-            CreateBookingResponse response = BookingFactory.createBooking(request, requestSpec, responseSpec);
+            CreateBookingResponse response = bookingFactory.createBooking(request);
             createdBookings.add(response);
         }
     }
 
     @Test
-    public void getBookings_noFilters_returnsArrayWithValidIds() {
+    public void getBookingsNoFiltersReturnsArrayWithIds() {
         List<Integer> expectedBookingIds = createdBookings.stream()
                                                           .map(CreateBookingResponse::getBookingid)
                                                           .toList();
 
         List<Integer> bookingIds = client
-                .getList("/booking", "bookingid", Integer.class);
+                .get(Endpoints.BOOKING_BASE, 200)
+                .jsonPath()
+                .getList("bookingid", Integer.class);
 
         assertThat(
                 "Expected booking id list to contain " + expectedBookingIds,
@@ -49,31 +52,35 @@ public class GetBookingTests extends BaseTest {
     }
 
     @Test
-    public void getBookings_filters_firstName() {
+    public void getBookingsWithFiltersFirstNameReturnsCorrectBookingIds() {
         int expectedBookingId = createdBookings.get(0).getBookingid();
 
         List<Integer> bookingIds = client
                 .withQueryParam("firstname", createdBookings.get(0).getBooking().getFirstname())
-                .getList("/booking", "bookingid", Integer.class);
+                .get(Endpoints.BOOKING_BASE, 200)
+                .jsonPath()
+                .getList("bookingid", Integer.class);
 
         assertThat("Expected bookingId list to contain " + expectedBookingId,
                 bookingIds, hasItem(expectedBookingId));
     }
 
     @Test
-    public void getBookings_filters_lastName() {
+    public void getBookingsWithFiltersLastNameReturnsCorrectBookingIds() {
         int expectedBookingId = createdBookings.get(0).getBookingid();
 
         List<Integer> bookingIds = client
-                .withQueryParam("lastname", createdBookings.get(0).getBooking().getLastname())
-                .getList("/booking", "bookingid", Integer.class);
+                .withQueryParam(Endpoints.PARAM_LASTNAME, createdBookings.get(0).getBooking().getLastname())
+                .get(Endpoints.BOOKING_BASE, 200)
+                .jsonPath()
+                .getList("bookingid", Integer.class);
 
         assertThat("Expected bookingId list to contain " + expectedBookingId,
                 bookingIds, hasItem(expectedBookingId));
     }
 
     @Test
-    public void getBookings_filters_checkinDate_greater_than_providedDate() {
+    public void getBookingsWithFiltersCheckinDateGreaterThanProvidedDateReturnsCorrectBookingIds() {
         String checkinDateParam = adjustDate(
                 createdBookings.get(0).getBooking().getBookingdates().getCheckin(),
                 -5,
@@ -81,15 +88,17 @@ public class GetBookingTests extends BaseTest {
         int expectedBookingId = createdBookings.get(0).getBookingid();
 
         List<Integer> bookingIds = client
-                .withQueryParam("checkin", checkinDateParam)
-                .getList("/booking", "bookingid", Integer.class);
+                .withQueryParam(Endpoints.PARAM_CHECKIN, checkinDateParam)
+                .get(Endpoints.BOOKING_BASE, 200)
+                .jsonPath()
+                .getList("bookingid", Integer.class);
 
         assertThat("Expected bookingId list to contain " + expectedBookingId,
                 bookingIds, hasItem(expectedBookingId));
     }
 
     @Test
-    public void getBookings_filters_checkoutDate_less_than_provided_date() {
+    public void getBookingsWithFiltersCheckoutDateLessThanProvidedDateReturnsCorrectBookingIds() {
         String checkoutDateParam = adjustDate(
                 createdBookings.get(0).getBooking().getBookingdates().getCheckout(),
                 5,
@@ -97,15 +106,17 @@ public class GetBookingTests extends BaseTest {
         int expectedBookingId = createdBookings.get(0).getBookingid();
 
         List<Integer> bookingIds = client
-                .withQueryParam("checkout", checkoutDateParam)
-                .getList("/booking", "bookingid", Integer.class);
+                .withQueryParam(Endpoints.PARAM_CHECKOUT, checkoutDateParam)
+                .get(Endpoints.BOOKING_BASE, 200)
+                .jsonPath()
+                .getList("bookingid", Integer.class);
 
         assertThat("Expected bookingId list to contain " + expectedBookingId,
                 bookingIds, hasItem(expectedBookingId));
     }
 
     @Test
-    public void getBookings_filters_checkin_less_checkout_greater() {
+    public void getBookingsFiltersWithProvidedDateLessThanCheckinAndGreaterThanCheckoutReturnsCorrectBookingIds() {
         String checkinDateParam = adjustDate(
                 createdBookings.get(0).getBooking().getBookingdates().getCheckin(),
                 -5,
@@ -120,9 +131,11 @@ public class GetBookingTests extends BaseTest {
                                                           .toList();
 
         List<Integer> bookingIds = client
-                .withQueryParam("checkin", checkinDateParam)
-                .withQueryParam("checkout", checkoutDateParam)
-                .getList("/booking", "bookingid", Integer.class);
+                .withQueryParam(Endpoints.PARAM_CHECKIN, checkinDateParam)
+                .withQueryParam(Endpoints.PARAM_CHECKOUT, checkoutDateParam)
+                .get(Endpoints.BOOKING_BASE, 200)
+                .jsonPath()
+                .getList("bookingid", Integer.class);
 
         assertThat(
                 "Expected booking id list to contain " + expectedBookingIds,
@@ -132,7 +145,7 @@ public class GetBookingTests extends BaseTest {
     }
 
     @Test
-    public void getBookings_filters_checkoutDate_equal_to_provided_date() {
+    public void getBookingsFiltersWithCheckoutDateEqualToProvidedDateReturnsCorrectBookingIds() {
         String checkoutDateParam = adjustDate(
                 createdBookings.get(0).getBooking().getBookingdates().getCheckout(),
                 0,
@@ -140,15 +153,17 @@ public class GetBookingTests extends BaseTest {
         int expectedBookingId = createdBookings.get(0).getBookingid();
 
         List<Integer> bookingIds = client
-                .withQueryParam("checkout", checkoutDateParam)
-                .getList("/booking", "bookingid", Integer.class);
+                .withQueryParam(Endpoints.PARAM_CHECKOUT, checkoutDateParam)
+                .get(Endpoints.BOOKING_BASE, 200)
+                .jsonPath()
+                .getList("bookingid", Integer.class);
 
         assertThat("Expected bookingId list to contain " + expectedBookingId,
                 bookingIds, hasItem(expectedBookingId));
     }
 
     @Test
-    public void getBookings_filters_checkinDate_equal_to_providedDate() {
+    public void getBookingsFiltersWithCheckinDateEqualToProvidedDateReturnsCorrectBookingIds() {
         String checkinDateParam = adjustDate(
                 createdBookings.get(0).getBooking().getBookingdates().getCheckin(),
                 0,
@@ -156,51 +171,53 @@ public class GetBookingTests extends BaseTest {
         int expectedBookingId = createdBookings.get(0).getBookingid();
 
         List<Integer> bookingIds = client
-                .withQueryParam("checkin", checkinDateParam)
-                .getList("/booking", "bookingid", Integer.class);
+                .withQueryParam(Endpoints.PARAM_CHECKIN, checkinDateParam)
+                .get(Endpoints.BOOKING_BASE, 200)
+                .jsonPath()
+                .getList("bookingid", Integer.class);
 
         assertThat("Expected bookingId list to contain " + expectedBookingId,
                 bookingIds, hasItem(expectedBookingId));
     }
 
     @Test
-    public void getBookings_filters_checkinDate_incorrect_format_return_400_status() {
+    public void getBookingsFiltersWithCheckinDateIncorrectFormatReturnBadParams() {
         String checkinDateParam = adjustDate(
                 createdBookings.get(0).getBooking().getBookingdates().getCheckin(),
                 -1,
                 DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.US)
         );
 
-        client.withQueryParam("checkin", checkinDateParam)
-              .get("/booking", 400);
+        client.withQueryParam(Endpoints.PARAM_CHECKIN, checkinDateParam)
+              .get(Endpoints.BOOKING_BASE, 400);
     }
 
     @Test
-    public void getBookings_filters_checkinDate_incorrectType_return_400_status() {
-        client.withQueryParam("checkin", 222)
-              .get("/booking", 400);
+    public void getBookingsFiltersCheckinDateIncorrectTypeReturnBadParams() {
+        client.withQueryParam(Endpoints.PARAM_CHECKIN, 222)
+              .get(Endpoints.BOOKING_BASE, 400);
     }
 
     @Test
-    public void getBookings_filters_return_empty_result() {
-        client.withQueryParam("firstname", UUID.randomUUID().toString())
-              .get("/booking")
+    public void getBookingsFiltersNotMatchingReturnsEmptyList() {
+        client.withQueryParam(Endpoints.PARAM_FIRSTNAME, UUID.randomUUID().toString())
+              .get(Endpoints.BOOKING_BASE, 200)
               .then()
               .body("", empty());
     }
 
     @Test
-    public void getBookings_filters_SQLInjection_truthy() {
-        client.withQueryParam("firstname", "nishant' OR '1'='1")
-              .get("/booking")
+    public void getBookingsFiltersSqlInjectionTruthyReturnsEmptyList() {
+        client.withQueryParam(Endpoints.PARAM_FIRSTNAME, "nishant' OR '1'='1")
+              .get(Endpoints.BOOKING_BASE, 200)
               .then()
               .body("", empty());
     }
 
     @Test
-    public void getBookings_filters_SQLInjection_union() {
-        client.withQueryParam("firstname", "nishant' UNION Select username, password from users--")
-              .get("/booking")
+    public void getBookingsFiltersSqlInjectionUnionReturnsEmptyList() {
+        client.withQueryParam(Endpoints.PARAM_FIRSTNAME, "nishant' UNION Select username, password from users--")
+              .get(Endpoints.BOOKING_BASE, 200)
               .then()
               .body("", empty());
     }

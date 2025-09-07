@@ -2,38 +2,34 @@ package api.integration;
 
 import api.setup.BaseTest;
 import api.setup.BookingFactory;
-import config.Constants;
-import io.restassured.specification.RequestSpecification;
+import config.Endpoints;
 import org.json.JSONObject;
 import org.testng.annotations.Test;
 import pojo.BookingRequest;
 import pojo.CreateBookingResponse;
-import pojo.LoginRequest;
 import pojo.BookingResponse;
+import utils.Auth;
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;
 
-import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static utils.Auth.login;
 import static utils.DateUtil.adjustDate;
 
-public class Bookinge2eTests extends BaseTest {
+public class BookingE2ETests extends BaseTest {
+    Auth auth;
 
     @Test
-    public void bookinge2eflow() throws IOException {
+    public void bookingE2eFlow() throws IOException {
         //create a new booking
         BookingRequest bookingRequests =
                 BookingFactory.loadBookingRequests("src/test/resources/bookingData_single.json")
                               .get(0);
-        CreateBookingResponse createBookingResponse = BookingFactory.createBooking(bookingRequests, requestSpec, responseSpec);
+        CreateBookingResponse createBookingResponse = bookingFactory.createBooking(bookingRequests);
 
-        //login and generate token for patch and delete
-        LoginRequest loginRequest = new LoginRequest(Constants.USERNAME, Constants.PASSWORD);
-        String token = login(loginRequest, requestSpec, responseSpec);
+        auth = new Auth(client);
+        String token = auth.login(username, password);
 
         // patch the above created booking with checkin, checkout and firstname
         String checkinDateParam =
@@ -61,9 +57,10 @@ public class Bookinge2eTests extends BaseTest {
 
         BookingResponse patchedResponse = client
                 .withToken(token)
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .withBody(patchBookingRequestBody.toString())
-                .patch("/booking/{id}", BookingResponse.class);
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .withJsonBody(patchBookingRequestBody)
+                .patch(Endpoints.BOOKING_BY_ID, 200)
+                .as(BookingResponse.class);
 
         assertThat(patchedResponse.getBookingdates().getCheckin().toString(), is(bookingDates.get("checkin")));
         assertThat(patchedResponse.getBookingdates().getCheckout().toString(), is(bookingDates.get("checkout")));
@@ -72,14 +69,14 @@ public class Bookinge2eTests extends BaseTest {
         // delete the booking
         client
                 .withToken(token)
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .delete("/booking/{id}");
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .delete(Endpoints.BOOKING_BY_ID, 201);
 
         //verifying the booking actually get deleted
         client
                 .withToken(token)
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .get("/booking/{id}", 404);
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .get(Endpoints.BOOKING_BY_ID, 404);
 
     }
 }

@@ -11,7 +11,11 @@ public class DateUtil {
      * @param days     the number of days to add (negative to subtract)
      * @return new date in yyyy-MM-dd format
      */
-    public static String adjustDate(LocalDate baseDate, int days, DateTimeFormatter FORMATTER) {
-        return baseDate.plusDays(days).format(FORMATTER);
+    public static String adjustDate(LocalDate baseDate, int days, DateTimeFormatter formatter) {
+        return baseDate.plusDays(days).format(formatter);
+    }
+
+    public static LocalDate adjustDateToLocalDate(LocalDate baseDate, int days) {
+        return baseDate.plusDays(days);
     }
 }
