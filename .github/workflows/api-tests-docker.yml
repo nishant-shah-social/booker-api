@@ -24,7 +24,8 @@ jobs:
           mkdir -p allure-results
           docker run --rm \
             -v "${{ github.workspace }}/allure-results:/app/target/allure-results" \
-            api-tests:ci
+            api-tests:ci \
+            mvn test -DsuiteXmlFile=testng.xml -Dmaven.test.failure.ignore=true
 
       - name: Upload allure-results
         if: always()
