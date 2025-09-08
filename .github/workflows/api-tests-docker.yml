@@ -68,10 +68,14 @@ jobs:
           curl -L -o allure.zip https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.zip
           unzip -q allure.zip -d /opt
           /opt/allure-2.27.0/bin/allure generate allure-results -o report --clean
-          # Copy generated files into repo root
+
+      - name: Copy report to root
+        run: |
           rm -rf ./* || true
-          cp -r report/* ./
+          shopt -s dotglob
+          cp -r report/* .
           rm -rf report
+          ls -la   # debug: confirm index.html is at root
 
       # 5️⃣ Commit & push updated report
       - name: Commit & push Allure report
