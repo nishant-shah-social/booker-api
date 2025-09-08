@@ -2,14 +2,13 @@ package api.booking;
 
 import api.setup.BaseTest;
 import api.setup.BookingFactory;
-import config.Constants;
-import io.restassured.specification.RequestSpecification;
+import config.Endpoints;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import pojo.BookingRequest;
 import pojo.CreateBookingResponse;
-import pojo.LoginRequest;
+import utils.Auth;
 
 import java.io.IOException;
 
@@ -17,7 +16,6 @@ import static io.restassured.RestAssured.given;
 import static java.util.Collections.synchronizedList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static utils.Auth.login;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,12 +24,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class DeleteBookingTests extends BaseTest {
+    Auth auth;
     private String token = "";
 
     @BeforeClass
     public void setupAuth() {
-        LoginRequest loginRequest = new LoginRequest(Constants.USERNAME, Constants.PASSWORD);
-        token = login(loginRequest, requestSpec, responseSpec);
+        auth = new Auth(client);
+        token = auth.login(username, password);
     }
 
     @DataProvider(name = "bookingData")
@@ -39,18 +38,18 @@ public class DeleteBookingTests extends BaseTest {
         BookingRequest bookingRequests =
                 BookingFactory.loadBookingRequests("src/test/resources/bookingData.json")
                               .get(0);
-        CreateBookingResponse response = BookingFactory.createBooking(bookingRequests, requestSpec, responseSpec);
+        CreateBookingResponse response = bookingFactory.createBooking(bookingRequests);
         return new Object[][]{
                 {response}
         };
     }
 
     @Test(dataProvider = "bookingData")
-    public void deleteExistingBooking(CreateBookingResponse createBookingResponse) {
+    public void deleteBookingExistingBookingIsSuccessful(CreateBookingResponse createBookingResponse) {
         client
                 .withToken(token)
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .delete("/booking/{id}");
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .delete(Endpoints.BOOKING_BY_ID, 200);
 
         // Verify that the booking is actually deleted (GET should return 404)
         client
@@ -60,30 +59,30 @@ public class DeleteBookingTests extends BaseTest {
     }
 
     @Test
-    public void deleteNonExistentBooking() {
+    public void deleteBookingNonExistentBookingReturns404() {
         client
                 .withToken(token)
-                .withPathParam("id", 2147483647)
-                .delete("/booking/{id}", 404);
+                .withPathParam(Endpoints.PARAM_ID, 2147483647)
+                .delete(Endpoints.BOOKING_BY_ID, 404);
     }
 
     @Test(dataProvider = "bookingData")
-    public void deleteWithoutAuthentication_returns403(CreateBookingResponse createBookingResponse) {
+    public void deleteBookingWithoutAuthenticationReturns403(CreateBookingResponse createBookingResponse) {
         client
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .delete("/booking/{id}", 403);
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .delete(Endpoints.BOOKING_BY_ID, 403);
     }
 
     @Test(dataProvider = "bookingData")
-    public void deleteWithWrongAuthToken_returns403(CreateBookingResponse createBookingResponse) {
+    public void deleteBookingWithWrongAuthTokenReturns403(CreateBookingResponse createBookingResponse) {
         client
                 .withToken("test1234")
-                .withPathParam("id", createBookingResponse.getBookingid())
-                .delete("/booking/{id}", 403);
+                .withPathParam(Endpoints.PARAM_ID, createBookingResponse.getBookingid())
+                .delete(Endpoints.BOOKING_BY_ID, 403);
     }
 
     @Test(dataProvider = "bookingData")
-    public void deleteExistingBooking_concurrent(CreateBookingResponse createBookingResponse) throws InterruptedException {
+    public void deleteBookingExistingBookingConcurrentlySucceeds(CreateBookingResponse createBookingResponse) throws InterruptedException {
         final int bookingId = createBookingResponse.getBookingid();
         final int threads = 2;
 
@@ -101,9 +100,9 @@ public class DeleteBookingTests extends BaseTest {
                     int status = given()
                             .spec(requestSpec)
                             .cookie("token", token)
-                            .pathParam("id", bookingId)
+                            .pathParam(Endpoints.PARAM_ID, bookingId)
                             .when()
-                            .delete("/booking/{id}")
+                            .delete(Endpoints.BOOKING_BY_ID)
                             .then()
                             .extract()
                             .statusCode();
@@ -121,7 +120,7 @@ public class DeleteBookingTests extends BaseTest {
         doneGate.await();
         pool.shutdownNow();
 
-        long successCount = statuses.stream().filter(s -> s == 201).count();
+        long successCount = statuses.stream().filter(s -> s == 201).count(); //assuming 201 is correct respons code for this test case to run successfully.
         long notFoundCount = statuses.stream().filter(s -> s == 404 || s == 405).count();
         long otherCount = statuses.size() - successCount - notFoundCount;
 
@@ -137,7 +136,7 @@ public class DeleteBookingTests extends BaseTest {
     }
 
     @Test(dataProvider = "bookingData")
-    public void deleteWithoutBookingId(CreateBookingResponse createBookingResponse) {
+    public void deleteBookingWithoutBookingIdReturns404(CreateBookingResponse createBookingResponse) {
         client
                 .delete("/booking", 404);
     }

@@ -17,9 +17,8 @@ RUN apt-get update && apt-get install -y unzip curl ca-certificates \
     && rm allure.zip \
     && ln -s /opt/allure-2.27.0/bin/allure /usr/bin/allure
 
-# Expose port
+# Expose port for local allure serve
 EXPOSE 8080
 
-# Run tests on container start, then serve Allure report
 CMD mvn clean test -DsuiteXmlFile=testng.xml -Dmaven.test.failure.ignore=true && \
-    allure serve target/allure-results --host 0.0.0.0 --port 8080
+    allure serve target/allure-results --host 0.0.0.0 --port 8080; \

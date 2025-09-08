@@ -1,0 +1,79 @@
+name: API Tests (Docker + Allure → gh-pages)
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write  # needed to push to gh-pages
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t api-tests:ci -f docker/Dockerfile --build-arg MODE=ci .
+
+      - name: Run tests (CI mode)
+        run: |
+          mkdir -p allure-results
+          docker run --rm \
+            -v "${{ github.workspace }}/allure-results:/app/target/allure-results" \
+            api-tests:ci \
+            mvn test -DsuiteXmlFile=testng.xml -Dmaven.test.failure.ignore=true
+
+      - name: Upload allure-results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # 1️⃣ Checkout gh-pages branch into its own folder
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+
+      # 2️⃣ Download allure-results from test job
+      - name: Download allure-results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+
+      # 3️⃣ Preserve Allure history
+      - name: Preserve Allure history
+        run: |
+          if [ -d gh-pages/history ]; then
+            mkdir -p allure-results/history
+            cp -r gh-pages/history/* allure-results/history/ || true
+          fi
+
+      # 4️⃣ Generate new Allure report
+      - name: Generate Allure report
+        run: |
+          curl -L -o allure.zip https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.zip
+          unzip -q allure.zip -d /opt
+          /opt/allure-2.27.0/bin/allure generate allure-results -o docs --clean
+
+      # 5️⃣ Commit & push updated report
+      - name: Commit & push Allure report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update Allure report [skip ci]" || echo "No changes to commit"
+          git push origin gh-pages --force
