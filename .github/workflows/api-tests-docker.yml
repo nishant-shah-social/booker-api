@@ -40,14 +40,15 @@ jobs:
     permissions:
       contents: write
     steps:
-      # 1️⃣ Checkout gh-pages branch
+      # 1️⃣ Checkout gh-pages branch into its own folder
       - name: Checkout gh-pages branch
         uses: actions/checkout@v4
         with:
           ref: gh-pages
           fetch-depth: 0
+          path: gh-pages
 
-      # 2️⃣ Download allure-results
+      # 2️⃣ Download allure-results from test job
       - name: Download allure-results
         uses: actions/download-artifact@v4
         with:
@@ -57,29 +58,22 @@ jobs:
       # 3️⃣ Preserve Allure history
       - name: Preserve Allure history
         run: |
-          if [ -d history ]; then
+          if [ -d gh-pages/history ]; then
             mkdir -p allure-results/history
-            cp -r history/* allure-results/history/
+            cp -r gh-pages/history/* allure-results/history/ || true
           fi
 
-      # 4️⃣ Generate Allure report (in temp folder, not root)
+      # 4️⃣ Generate new Allure report
       - name: Generate Allure report
         run: |
           curl -L -o allure.zip https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.zip
           unzip -q allure.zip -d /opt
-          /opt/allure-2.27.0/bin/allure generate allure-results -o report --clean
-
-      - name: Copy report to root
-        run: |
-          rm -rf ./* || true
-          shopt -s dotglob
-          cp -r report/* .
-          rm -rf report
-          ls -la   # debug: confirm index.html is at root
+          /opt/allure-2.27.0/bin/allure generate allure-results -o gh-pages --clean
 
       # 5️⃣ Commit & push updated report
       - name: Commit & push Allure report
         run: |
+          cd gh-pages
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
