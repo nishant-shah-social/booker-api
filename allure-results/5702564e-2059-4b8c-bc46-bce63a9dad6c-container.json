@@ -1,0 +1,1 @@
+{"uuid":"5702564e-2059-4b8c-bc46-bce63a9dad6c","name":"api.integration.BookingE2ETests","children":["191e5df3-fd9d-40bc-bfa0-6dc4689b5f62"],"befores":[{"name":"setupBaseConfiguration","status":"passed","stage":"finished","description":"","steps":[],"attachments":[],"parameters":[],"start":1757364748064,"stop":1757364748067}],"afters":[],"start":1757364748063,"stop":1757364748888}
