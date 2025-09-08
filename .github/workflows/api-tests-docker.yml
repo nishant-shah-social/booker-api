@@ -40,29 +40,21 @@ jobs:
     permissions:
       contents: write
     steps:
-      # 1️⃣ Checkout gh-pages branch (or create if missing)
+      # 1️⃣ Checkout gh-pages branch
       - name: Checkout gh-pages branch
         uses: actions/checkout@v4
         with:
           ref: gh-pages
           fetch-depth: 0
 
-      # 2️⃣ If gh-pages is empty (first run), init it
-      - name: Init gh-pages branch if empty
-        run: |
-          if [ ! -d .git ]; then
-            git init
-            git checkout -b gh-pages
-          fi
-
-      # 3️⃣ Download allure-results from test job
+      # 2️⃣ Download allure-results
       - name: Download allure-results
         uses: actions/download-artifact@v4
         with:
           name: allure-results
           path: allure-results
 
-      # 4️⃣ Preserve Allure history
+      # 3️⃣ Preserve Allure history
       - name: Preserve Allure history
         run: |
           if [ -d history ]; then
@@ -70,14 +62,18 @@ jobs:
             cp -r history/* allure-results/history/
           fi
 
-      # 5️⃣ Generate Allure report at repo root
+      # 4️⃣ Generate Allure report (in temp folder, not root)
       - name: Generate Allure report
         run: |
           curl -L -o allure.zip https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.zip
           unzip -q allure.zip -d /opt
-          /opt/allure-2.27.0/bin/allure generate allure-results -o . --clean
+          /opt/allure-2.27.0/bin/allure generate allure-results -o report --clean
+          # Copy generated files into repo root
+          rm -rf ./* || true
+          cp -r report/* ./
+          rm -rf report
 
-      # 6️⃣ Commit & push report
+      # 5️⃣ Commit & push updated report
       - name: Commit & push Allure report
         run: |
           git config user.name "github-actions[bot]"
