@@ -57,9 +57,9 @@ jobs:
       # 3️⃣ Copy previous history (if exists)
       - name: Preserve Allure history
         run: |
-          if [ -d gh-pages/history ]; then
-            mkdir -p allure-results/history
-            cp -r gh-pages/history/* allure-results/history/
+          if [ -d history ]; then
+          mkdir -p allure-results/history
+          cp -r history/* allure-results/history/
           fi
 
       # 4️⃣ Generate Allure report
